@@ -1,0 +1,138 @@
+---
+title: "BST270 Individual Project"
+author: "Ziqi Fu"
+date: "2025-01-25"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(results = 'hold', echo = FALSE, warning = FALSE, message = FALSE)
+```
+
+## Dependencies
+This notebook can be reproduced by installing the following R packages: 
+
+- ggplot2
+- dplyr
+- readr
+- tidyr
+- magrittr
+- knitr
+
+```{r, message=FALSE, warning=FALSE,echo=TRUE}
+library(ggplot2)
+library(dplyr)
+library(readr)
+library(tidyr)
+library(magrittr)
+library(knitr)
+```
+
+For packages that are not installed, use the command `install.packages('PACKAGE_NAME')` for installation.
+
+## 1. Reproducing the table in article [Where Are America’s Librarians?](https://fivethirtyeight.com/features/where-are-americas-librarians/)
+
+We first download the data file `librarians-by-msa.csv` from its [GitHub repo](https://github.com/fivethirtyeight/data/tree/master/librarians). A copy of this data file has also been stored locally in the `Data` directory. Detailed [codes](#codes-1) are available in the end of this file.
+
+```{r librarian, echo=FALSE}
+# Load and clean data
+lib.data=read.csv("Data/librarians-by-msa.csv", header=T)  
+names(lib.data)=tolower(names(lib.data))
+lib.data$tot_emp=as.numeric(gsub("[$]|,", "", lib.data$tot_emp))
+lib.data$emp_prse=as.numeric(gsub("[$]|,", "", lib.data$emp_prse))
+lib.data$jobs_1000=as.double(lib.data$jobs_1000) %>% round(2)
+lib.data = drop_na(lib.data)
+
+# Build model and get coefficients
+nl.model=nls(data=lib.data, formula=emp_prse~a*tot_emp^b, start=list(a=1, b=1))
+a=coef(nl.model)[1]
+b=coef(nl.model)[2] 
+
+# Get lower and upper estimates
+lib.data$mor=(a*(lib.data$tot_emp^b))*1 #SD=1
+lib.data$HE=(lib.data$tot_emp*(1+(lib.data$mor/100))) %>% round(0)
+lib.data$LE=(lib.data$tot_emp*(1-(lib.data$mor/100))) %>% round(0)
+
+# select areas to generate a table
+select.area = c('Owensboro, KY',
+                 'Nassau-Suffolk, NY Metropolitan Division',
+                 'Bethesda-Rockville-Frederick, MD Metropolitan Division',
+                 'New Haven, CT',
+                 'Haverhill-North Andover-Amesbury, MA-NH NECTA Division',
+                 'Tallahassee, FL',
+                 'Durham-Chapel Hill, NC',
+                 'Ithaca, NY',
+                 'Dover, DE',
+                 'St. Joseph, MO-KS')
+
+tb = lib.data[match(select.area,lib.data$area_name),c(2,5,3,9,8)] %>% as.data.frame()
+colnames(tb) = c('METROPOLITAN AREA','JOB QUOTIENT','NUMBER OF LIBRARIANS','LOWER ESTIMATE','UPPER ESTIMATE')
+kable(tb,row.names = F) # display the table
+```
+
+### Notes
+The lower and upper estimates are computed using `SD=1`, and the original data does not contain information about `HAS A COLLEGE` for the selected areas. For simplicity, we will skip the last columns, since all the selected areas are indicated to have a college in the original table we try to replicate. All the numbers in this table match perfectly with the original table. 
+
+
+## 2. Reproducing the first graph in article [The Dallas Shooting Was Among The Deadliest For Police In U.S. History](https://fivethirtyeight.com/features/the-dallas-shooting-was-among-the-deadliest-for-police-in-u-s-history/)
+
+We first download the cleaned version of the data `clean_data.csv` from its [GitHub repo](https://github.com/fivethirtyeight/data/tree/master/police-deaths). This data file has been renamed as `police-death-clean.csv` and stored under the `/Data` directory. We are reproducing the first graph in the original article, and the detailed [codes](#codes-2) are attached below.
+
+```{r police,echo=FALSE}
+# Load and clean data
+clean_data = read.csv('Data/police-death-clean.csv') %>% filter(canine == FALSE) 
+
+# Major categories found in the data
+large_categories = clean_data %>%
+      group_by(year, cause_short) %>%
+      summarize(count = n()) %>%
+      data.frame() %>%
+      filter(count >= 20) %>% # chose the category if # incidence >= 20
+      select(cause_short) %>%
+      unique()
+cat_to_plot = c(large_categories$cause_short, "Gunfire (Accidental)") #also include accidental gunfire cases
+
+plot_order = clean_data %>%
+    mutate(cat = ifelse(cause_short %in% cat_to_plot, cause_short, 'other')) %>%
+    group_by(cat) %>%
+    summarize(count = n()) %>%
+    data.frame() %>%
+    arrange(desc(count)) %>%
+    extract2(1)
+
+# Move order to the end
+plot_order = c(plot_order[! (plot_order == 'other')], 'other')
+    
+# Create data for plotting
+data_for_plot = clean_data %>%
+      mutate(cat = ifelse(cause_short %in% cat_to_plot, cause_short, 'other')) %>%
+      group_by(year, cat) %>%
+      summarize(count = n()) %>%
+      data.frame() %>%
+      spread(cat, count)
+data_for_plot[is.na(data_for_plot)] = 0
+data_for_plot = data_for_plot %>%
+      gather(cat, count, -year) %>%
+      mutate(cat = factor(cat, levels=plot_order)) %>%
+      arrange(cat)
+
+# generate the plot
+ggplot(data_for_plot, aes(x=year, y=count, group=cat, order=cat)) +
+      geom_area(aes(fill=cat),color='blue',size=0.05, position='stack') +
+      labs(fill=NULL,title='On-duty police officer deaths in the U.S.',subtitle='By cause since 1791',x=NULL,y=NULL)+
+      theme(legend.position = c(0.2,0.55),legend.background = element_rect(fill = "grey"))
+
+```
+
+\section{Codes} 
+## Codes for reproducing table 1 {#codes-1}
+```{r ref.label='librarian', echo=TRUE, eval=FALSE} 
+
+```
+
+## Codes for reproducing graph 1 {#codes-2}
+```{r ref.label='police', echo=TRUE, eval=FALSE} 
+
+```
+
+
