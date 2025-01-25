@@ -2,16 +2,17 @@
 
 This is my repository for the 2025 Winter BST270 individual project.
 
-## Porject structure
+## Porject description
 
 We made an attempt to reproduce the following:
 
 * A table from [Where Are America's Librarians](https://fivethirtyeight.com/features/where-are-americas-librarians/https:/), [GitHub](https://github.com/fivethirtyeight/data/tree/master/librarians)
 * The first graph from [The Dallas Shooting Was Among The Deadliest For Police In U.S. History](https://fivethirtyeight.com/features/the-dallas-shooting-was-among-the-deadliest-for-police-in-u-s-history/), [GitHub](https://github.com/fivethirtyeight/data/tree/master/police-deaths)
 
+
 ## Data
 
-The cleaned data tables are being stored in the [Data](Data) directory in this repo.
+The cleaned data tables are being stored in the [Data](Data) directory in this repo for easier access.
 
 ## How to get started
 
