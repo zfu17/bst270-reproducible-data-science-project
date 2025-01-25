@@ -116,6 +116,7 @@ data_for_plot = data_for_plot %>%
       mutate(cat = factor(cat, levels=plot_order)) %>%
       arrange(cat)
 
+
 # generate the plot
 ggplot(data_for_plot, aes(x=year, y=count, group=cat, order=cat)) +
       geom_area(aes(fill=cat),color='blue',size=0.05, position='stack') +
@@ -123,6 +124,9 @@ ggplot(data_for_plot, aes(x=year, y=count, group=cat, order=cat)) +
       theme(legend.position = c(0.2,0.55),legend.background = element_rect(fill = "grey"))
 
 ```
+
+### Notes
+The graph is highly reproducible except for a few aesthetic differences. Here, we directly use the cleaned data set and avoid any further data wrangler needed to process the raw data. The raw data is also available on the article's GitHub page, and the authors uploaded the data cleaning script for reproducibility. 
 
 \section{Codes} 
 ## Codes for reproducing table 1 {#codes-1}
