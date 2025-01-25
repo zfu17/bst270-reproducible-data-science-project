@@ -11,6 +11,6 @@ We made an attempt to reproduce the following:
 
 ## Data
 
-The cleaned data tables are being stored in the [Data](Data/Users/ziqi_fu/DATA/bst270-reproducible-data-science-project/Datahttps:) directory in this repo.
+The cleaned data tables are being stored in the [Data](Data) directory in this repo.
 
 ## How to get started
